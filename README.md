@@ -8,4 +8,4 @@ A lightweight web app for viewing and managing PDF sheet music, designed for mus
 - **Responsive Design**: Optimized for desktops, tablets, and smartphones.
 
 ## Demo
-🚀 [Live Demo](#) (https://musicviewr.vercel.app/)
+🚀 [Live Demo](https://musicviewr.vercel.app/)
