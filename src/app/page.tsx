@@ -106,7 +106,7 @@ export default function SheetMusicViewer() {
     }, [isPlaying, tempo, isMuted]);
 
     return (
-        <div className="min-h-screen bg-[#06141B] text-[#CCD0CF] flex flex-col">
+        <div className="h-screen bg-[#06141B] text-[#CCD0CF] flex flex-col  ">
             {/* Sticky Navbar */}
             <nav className="sticky top-0 z-50 justify-center bg-[#11212D] border-b border-[#253745] p-4 flex items-center gap-16">
                 <div className="flex items-center gap-4">
@@ -154,9 +154,12 @@ export default function SheetMusicViewer() {
                 </div>
             </nav>
 
-            <div className="flex-1 h-full items-center flex justify-center overflow-hidden">
+            <div
+                ref={containerRef}
+                className="flex-1 h-full items-center flex justify-center overflow-y-auto"
+            >
                 {!pdfFile ? (
-                    <div className="h-full flex items-center justify-center">
+                    <div className="h-full flex items-center justify-center ">
                         <div className="text-center space-y-4">
                             <div className="p-8 border-2 border-dashed border-[#253745] rounded-lg">
                                 <Label
@@ -182,10 +185,7 @@ export default function SheetMusicViewer() {
                         </div>
                     </div>
                 ) : (
-                    <div
-                        ref={containerRef}
-                        className="h-full overflow-auto bg-[#253745] p-4"
-                    >
+                    <div className="h-full">
                         <Document
                             file={pdfFile}
                             onLoadSuccess={onDocumentLoadSuccess}
