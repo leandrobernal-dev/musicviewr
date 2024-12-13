@@ -90,10 +90,10 @@ export default function SheetMusicViewer() {
         if (isPlaying && containerRef.current) {
             const scrollInterval = setInterval(() => {
                 containerRef.current?.scrollBy({
-                    top: scrollSpeed * 2, // Multiply by 2 to make scrolling more noticeable
-                    behavior: "auto", // Changed to 'auto' for smoother continuous scrolling
+                    top: scrollSpeed, // Multiply by 2 to make scrolling more noticeable
+                    behavior: "smooth", // Changed to 'auto' for smoother continuous scrolling
                 });
-            }, 16); // Using requestAnimationFrame rate (approximately 60fps)
+            }, 32); // Using requestAnimationFrame rate (approximately 60fps)
 
             return () => clearInterval(scrollInterval);
         }
