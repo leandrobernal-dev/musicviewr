@@ -54,35 +54,51 @@ export default function SheetMusicViewer() {
 
     // Metronome functionality
     useEffect(() => {
-        audioContextRef.current = new AudioContext();
+        const audioContext = new AudioContext();
+        audioContextRef.current = audioContext;
+
+        // Resume the AudioContext on user interaction if needed
+        const resumeAudioContext = () => {
+            if (audioContext.state === "suspended") {
+                audioContext.resume();
+            }
+        };
+
+        document.addEventListener("click", resumeAudioContext);
 
         return () => {
-            audioContextRef.current?.close();
-            if (metronomeIntervalRef.current) {
-                clearInterval(metronomeIntervalRef.current);
-            }
+            audioContext.close();
+            document.removeEventListener("click", resumeAudioContext);
         };
     }, []);
 
     const playMetronome = () => {
         if (!audioContextRef.current || isMuted) return;
 
-        const oscillator = audioContextRef.current.createOscillator();
-        const gainNode = audioContextRef.current.createGain();
+        const audioContext = audioContextRef.current;
+
+        // Create oscillator and gain node
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
 
         oscillator.connect(gainNode);
-        gainNode.connect(audioContextRef.current.destination);
+        gainNode.connect(audioContext.destination);
 
-        oscillator.frequency.value = 880;
+        // Set frequency and volume
+        oscillator.frequency.value = 880; // High-pitched tone
         gainNode.gain.value = 0.5;
 
-        oscillator.start();
+        // Start the oscillator immediately
+        const startTime = audioContext.currentTime; // Get current audio time
+        oscillator.start(startTime);
+
+        // Schedule the sound to fade out and stop
         gainNode.gain.exponentialRampToValueAtTime(
             0.00001,
-            audioContextRef.current.currentTime + 0.1
+            startTime + 0.1 // 0.1 seconds fade-out
         );
 
-        setTimeout(() => oscillator.stop(), 100);
+        oscillator.stop(startTime + 0.1); // Stop after 0.1 seconds
     };
 
     // Auto-scroll functionality with improved scrolling
