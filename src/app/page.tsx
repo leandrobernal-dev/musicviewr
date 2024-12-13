@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
-import { Upload, Play, Pause, Volume2, VolumeX } from "lucide-react";
+import { Upload, Play, Pause, Volume2, VolumeX, ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +30,7 @@ export default function SheetMusicViewer() {
     const [scrollSpeed, setScrollSpeed] = useState(1);
     const [isMuted, setIsMuted] = useState(false);
     const [zoom, setZoom] = useState(100);
+    const [showScrollToTop, setShowScrollToTop] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
     const metronomeIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -101,15 +102,15 @@ export default function SheetMusicViewer() {
         oscillator.stop(startTime + 0.1); // Stop after 0.1 seconds
     };
 
-    // Auto-scroll functionality with improved scrolling
+    // Auto-scroll functionality
     useEffect(() => {
         if (isPlaying && containerRef.current) {
             const scrollInterval = setInterval(() => {
                 containerRef.current?.scrollBy({
-                    top: scrollSpeed, // Multiply by 2 to make scrolling more noticeable
-                    behavior: "smooth", // Changed to 'auto' for smoother continuous scrolling
+                    top: scrollSpeed,
+                    behavior: "auto",
                 });
-            }, 32); // Using requestAnimationFrame rate (approximately 60fps)
+            }, 32);
 
             return () => clearInterval(scrollInterval);
         }
@@ -128,6 +129,51 @@ export default function SheetMusicViewer() {
             };
         }
     }, [isPlaying, tempo, isMuted]);
+
+    // Handle scroll to top visibility
+    useEffect(() => {
+        const handleScroll = () => {
+            if (!containerRef.current) return;
+            if (containerRef.current.scrollTop > 100) {
+                setShowScrollToTop(true);
+            } else {
+                setShowScrollToTop(false);
+            }
+        };
+
+        containerRef.current?.addEventListener("scroll", handleScroll);
+
+        return () => {
+            containerRef.current?.removeEventListener("scroll", handleScroll);
+        };
+    }, []);
+
+    // Handle spacebar play/pause
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.code === "Space") {
+                event.preventDefault(); // Prevent page scrolling
+                setIsPlaying((prev) => !prev);
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, []);
+
+    const scrollToTop = () => {
+        setIsPlaying(false); // Temporarily pause auto-scrolling
+        containerRef.current?.scrollTo({
+            top: 0,
+            behavior: "smooth",
+        });
+        if (isPlaying) {
+            setTimeout(() => setIsPlaying(true), 500); // Resume auto-scrolling after scrolling ends
+        }
+    };
 
     return (
         <SidebarProvider>
@@ -216,8 +262,17 @@ export default function SheetMusicViewer() {
 
                     <div
                         ref={containerRef}
-                        className="flex-1 h-full overflow-y-auto bg-[#06141B] flex justify-center"
+                        className="flex-1 h-full overflow-y-auto bg-[#06141B] flex justify-center relative"
                     >
+                        {showScrollToTop && (
+                            <button
+                                onClick={scrollToTop}
+                                className="fixed bottom-8 right-8 p-3 bg-[#253745] hover:bg-[#4A5C6A] text-white rounded-full shadow-lg"
+                            >
+                                <ArrowUp className="w-6 h-6" />
+                            </button>
+                        )}
+
                         {!pdfFile ? (
                             <div className="h-full flex items-center justify-center">
                                 <div className="text-center space-y-4">
