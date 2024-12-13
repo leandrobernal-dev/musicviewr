@@ -6,7 +6,14 @@ import { Upload, Play, Pause, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PDFSidebar } from "@/components/pdf-sidebar";
+import {
+    SidebarProvider,
+    SidebarInset,
+    SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { NumberInput } from "@/components/NumberInput";
+import { ZoomControls } from "@/components/zoom-control";
 
 // Initialize PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -22,6 +29,7 @@ export default function SheetMusicViewer() {
     const [tempo, setTempo] = useState(120);
     const [scrollSpeed, setScrollSpeed] = useState(1);
     const [isMuted, setIsMuted] = useState(false);
+    const [zoom, setZoom] = useState(100);
     const containerRef = useRef<HTMLDivElement>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
     const metronomeIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -106,73 +114,78 @@ export default function SheetMusicViewer() {
     }, [isPlaying, tempo, isMuted]);
 
     return (
-        <div className="h-screen bg-[#06141B] text-[#CCD0CF] flex flex-col  ">
-            {/* Sticky Navbar */}
-            <nav className="sticky top-0 z-50 justify-center bg-[#11212D] border-b border-[#253745] p-4 flex items-center gap-16">
-                <div className="flex items-center gap-4">
-                    <NumberInput
-                        value={tempo}
-                        onChange={setTempo}
-                        min={40}
-                        max={208}
-                        step={1}
-                        label="BPM"
-                    />
-                    <NumberInput
-                        value={scrollSpeed}
-                        onChange={setScrollSpeed}
-                        min={0}
-                        max={10}
-                        step={0.1}
-                        label="Scroll"
-                    />
-                </div>
-                <div className="flex items-center gap-4">
-                    <Button
-                        onClick={() => setIsMuted(!isMuted)}
-                        size="icon"
-                        variant="ghost"
-                        className="w-8 h-8"
-                    >
-                        {isMuted ? (
-                            <VolumeX className="w-4 h-4" />
-                        ) : (
-                            <Volume2 className="w-4 h-4" />
-                        )}
-                    </Button>
-                    <Button
-                        onClick={() => setIsPlaying(!isPlaying)}
-                        size="icon"
-                        className="bg-[#253745] hover:bg-[#4A5C6A] w-8 h-8"
-                    >
-                        {isPlaying ? (
-                            <Pause className="w-4 h-4" />
-                        ) : (
-                            <Play className="w-4 h-4" />
-                        )}
-                    </Button>
-                </div>
-            </nav>
-
-            <div
-                ref={containerRef}
-                className="flex-1 h-full items-center flex justify-center overflow-y-auto"
-            >
-                {!pdfFile ? (
-                    <div className="h-full flex items-center justify-center ">
-                        <div className="text-center space-y-4">
-                            <div className="p-8 border-2 border-dashed border-[#253745] rounded-lg">
-                                <Label
-                                    htmlFor="pdf-upload"
-                                    className="flex flex-col items-center gap-2 cursor-pointer"
+        <SidebarProvider>
+            <div className="h-screen w-full bg-[#06141B] text-[#CCD0CF] flex">
+                <PDFSidebar
+                    file={pdfFile}
+                    numPages={numPages}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                />
+                <SidebarInset className="flex-1 flex flex-col">
+                    {/* Responsive Navbar */}
+                    <nav className="sticky top-0 z-50 bg-[#11212D] border-b border-[#253745] p-4">
+                        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+                            <SidebarTrigger />
+                            <div className="flex flex-wrap items-center gap-4">
+                                <NumberInput
+                                    value={tempo}
+                                    onChange={setTempo}
+                                    min={40}
+                                    max={208}
+                                    step={1}
+                                    label="BPM"
+                                />
+                                <NumberInput
+                                    value={scrollSpeed}
+                                    onChange={setScrollSpeed}
+                                    min={0}
+                                    max={10}
+                                    step={0.1}
+                                    label="Scroll"
+                                />
+                                <ZoomControls
+                                    zoom={zoom}
+                                    onZoomChange={setZoom}
+                                />
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <Button
+                                    onClick={() => setIsMuted(!isMuted)}
+                                    size="icon"
+                                    variant="ghost"
+                                    className="w-8 h-8"
                                 >
-                                    <Upload className="w-8 h-8" />
-                                    <span className="text-lg font-medium">
-                                        Upload Sheet Music (PDF)
-                                    </span>
-                                    <span className="text-sm text-[#9BA8AB]">
-                                        Click to browse or drag and drop
-                                    </span>
+                                    {isMuted ? (
+                                        <VolumeX className="w-4 h-4" />
+                                    ) : (
+                                        <Volume2 className="w-4 h-4" />
+                                    )}
+                                </Button>
+                                <Button
+                                    onClick={() => setIsPlaying(!isPlaying)}
+                                    size="icon"
+                                    className="bg-[#253745] hover:bg-[#4A5C6A] w-8 h-8"
+                                >
+                                    {isPlaying ? (
+                                        <Pause className="w-4 h-4" />
+                                    ) : (
+                                        <Play className="w-4 h-4" />
+                                    )}
+                                </Button>
+                                <Label htmlFor="pdf-upload" className="mb-0">
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="bg-[#253745] hover:bg-[#4A5C6A] border-[#4A5C6A] w-8 h-8"
+                                        onClick={() =>
+                                            document
+                                                .getElementById("pdf-upload")
+                                                ?.click()
+                                        }
+                                    >
+                                        <Upload className="w-4 h-4" />
+                                    </Button>
                                 </Label>
                                 <Input
                                     id="pdf-upload"
@@ -183,27 +196,57 @@ export default function SheetMusicViewer() {
                                 />
                             </div>
                         </div>
+                    </nav>
+
+                    <div
+                        ref={containerRef}
+                        className="flex-1 h-full overflow-y-auto bg-[#06141B] flex justify-center"
+                    >
+                        {!pdfFile ? (
+                            <div className="h-full flex items-center justify-center">
+                                <div className="text-center space-y-4">
+                                    <div className="p-8 border-2 border-dashed border-[#253745] rounded-lg">
+                                        <Label
+                                            htmlFor="pdf-upload"
+                                            className="flex flex-col items-center gap-2 cursor-pointer"
+                                        >
+                                            <Upload className="w-8 h-8" />
+                                            <span className="text-lg font-medium">
+                                                Upload Sheet Music (PDF)
+                                            </span>
+                                            <span className="text-sm text-[#9BA8AB]">
+                                                Click to browse or drag and drop
+                                            </span>
+                                        </Label>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="h-full py-4">
+                                <Document
+                                    file={pdfFile}
+                                    onLoadSuccess={onDocumentLoadSuccess}
+                                    className="flex flex-col items-center"
+                                >
+                                    {Array.from(
+                                        new Array(numPages),
+                                        (el, index) => (
+                                            <Page
+                                                key={`page_${index + 1}`}
+                                                pageNumber={index + 1}
+                                                className="mb-4"
+                                                renderTextLayer={false}
+                                                renderAnnotationLayer={false}
+                                                scale={zoom / 100}
+                                            />
+                                        )
+                                    )}
+                                </Document>
+                            </div>
+                        )}
                     </div>
-                ) : (
-                    <div className="h-full">
-                        <Document
-                            file={pdfFile}
-                            onLoadSuccess={onDocumentLoadSuccess}
-                            className="flex flex-col items-center"
-                        >
-                            {Array.from(new Array(numPages), (el, index) => (
-                                <Page
-                                    key={`page_${index + 1}`}
-                                    pageNumber={index + 1}
-                                    className="mb-4"
-                                    renderTextLayer={false}
-                                    renderAnnotationLayer={false}
-                                />
-                            ))}
-                        </Document>
-                    </div>
-                )}
+                </SidebarInset>
             </div>
-        </div>
+        </SidebarProvider>
     );
 }
